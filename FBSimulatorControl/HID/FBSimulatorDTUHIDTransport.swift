@@ -198,11 +198,13 @@ actor FBSimulatorDTUHIDTransport: FBSimulatorHIDTransport {
 
   /// XPC creates the peer on its first message, before `dtuhidd` has an active service. Spend that
   /// message on HID usage zero, which indicates no key event, then allow service activation.
+  /// Activation exceeded 1.4s in fresh-simulator tests; two seconds provides margin in the absence
+  /// of a readiness acknowledgement from the daemon.
   private func primeThenWait() async throws {
     try await deliver(encode(
       messageType: "IndigoKeyboardButtonEvent",
       payload: IndigoKeyboardButtonEvent(usageCode: 0, state: .up)))
-    try await Task.sleep(nanoseconds: 750_000_000)
+    try await Task.sleep(nanoseconds: 2_000_000_000)
   }
 
   private func deliver(_ object: xpc_object_t) async throws {
